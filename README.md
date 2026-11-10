@@ -9,7 +9,7 @@
 ## 快速开始
 
 ```bash
-git clone <this repo>
+git clone https://github.com/wuqiuyu-6/rm27-arm-mirror.git
 cd rm27-arm-mirror
 python -m venv .venv
 .venv\Scripts\activate          # Windows
@@ -24,7 +24,8 @@ arm-mirror print                # 只打印关节角 + 力矩
 arm-mirror record --out mir.mp4 # 录视频
 ```
 
-或者直接双击 `examples/start-mirror.bat`。
+或者直接双击 `examples/start-mirror.bat`（未 `pip install` 时它用 `python -m arm_mirror`，
+需要先设置 `PYTHONPATH=src`，或在仓库根目录执行一次 `pip install -e .`）。
 
 ## 帧格式
 

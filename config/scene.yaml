@@ -1,0 +1,15 @@
+﻿# 装配仿真参数
+shm_name: rm27_shm
+port: 8005
+speed: 1.0
+hmi_delay_s: 0.05
+
+# 轨迹与场景
+trajectory: data/rm27_task.npz
+scene: model/physical/physical_scene.xml
+
+# 关键指标（回归用，见 README）
+expect:
+  insert_depth_mm: 100.0
+  p_deg: 90.0
+  q_deg: 51.6

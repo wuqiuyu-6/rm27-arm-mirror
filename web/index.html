@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>RMUC2027 科技核心装配 · 上位机</title>
+<style>
+  :root{
+    --bg:#12151a; --panel:#171c23; --line:#262d37;
+    --fg:#dfe6ef; --dim:#79838f; --accent:#38d0ff; --ok:#4ade80; --warn:#ef4444;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{height:100%;}
+  body{
+    background:var(--bg); color:var(--fg); overflow:hidden;
+    font-family:"Segoe UI","Microsoft YaHei UI",sans-serif; font-size:13px;
+    display:flex; flex-direction:column;
+  }
+  header{
+    display:flex; align-items:center; gap:10px;
+    height:44px; padding:0 16px; flex:0 0 auto;
+    background:#0f1319; border-bottom:1px solid var(--line);
+    -webkit-user-select:none; user-select:none;
+  }
+  header h1{font-size:13px; font-weight:600; letter-spacing:2px; color:#c6d2e0;}
+  #dot{width:7px;height:7px;border-radius:50%;background:#5a646f;transition:.3s;}
+  #dot.on{background:var(--ok); box-shadow:0 0 7px var(--ok);}
+  #phaseTag{
+    margin-left:auto; font-family:Consolas,monospace; font-size:11px;
+    color:var(--accent); letter-spacing:1px;
+  }
+  main{flex:1; display:grid; grid-template-columns:1fr 300px; min-height:0;}
+  .stage{position:relative; background:#0a0d12; min-height:0; overflow:hidden;}
+  canvas{display:block; width:100%; height:100%; cursor:grab;}
+  canvas:active{cursor:grabbing;}
+
+  #hud{
+    position:absolute; left:14px; top:12px;
+    font-family:Consolas,"Cascadia Mono",monospace;
+    color:rgba(255,255,255,.78); pointer-events:none;
+    text-shadow:0 1px 3px rgba(0,0,0,.95), 0 0 2px rgba(0,0,0,.9);
+    line-height:1.5;
+  }
+  #hud .k{color:rgba(255,255,255,.42); font-size:10px; letter-spacing:1px;}
+  #hud .v{font-size:15px; font-weight:700; letter-spacing:.5px;}
+  #hud .u{font-size:9px; opacity:.5;}
+  #hud .big{font-size:22px; color:var(--accent);}
+
+  aside{
+    background:var(--panel); border-left:1px solid var(--line);
+    display:flex; flex-direction:column; overflow-y:auto;
+  }
+  .sec{padding:14px 16px;}
+  .sec h2{font-size:10px; font-weight:600; color:var(--dim); letter-spacing:2px; margin-bottom:12px;}
+  .row{margin-bottom:11px;}
+  .row .lab{display:flex; justify-content:space-between; margin-bottom:5px;}
+  .row .lab span:first-child{color:#98a4b3; font-family:Consolas,monospace; font-size:11.5px;}
+  .row .lab span:last-child{color:var(--accent); font-family:Consolas,monospace; font-size:11.5px;}
+  input[type=range]{-webkit-appearance:none; width:100%; height:3px; border-radius:2px;
+                    background:#2e3743; outline:none;}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none; width:13px; height:13px;
+    border-radius:50%; background:var(--accent); cursor:pointer; border:2px solid #0d1116;
+    box-shadow:0 0 6px rgba(56,208,255,.5);}
+  .btns{display:flex; gap:8px; margin-top:8px;}
+  button{flex:1; padding:9px 0; border-radius:5px; cursor:pointer; background:#1f2630;
+         color:#b9c4d1; border:1px solid var(--line); font-size:12px; font-family:inherit;
+         transition:.15s;}
+  button:hover{background:#28303c; color:#e3ebf5;}
+  button.active{background:rgba(56,208,255,.12); border-color:var(--accent); color:var(--accent);}
+  .keyhelp{padding:12px 16px; border-top:1px solid var(--line); color:#66717f; font-size:10.5px; line-height:1.9;}
+  .keyhelp b{color:#8fa0b3; font-weight:600;}
+  .foot{margin-top:auto; padding:10px 16px; border-top:1px solid var(--line);
+        color:#5a646f; font-size:10.5px; line-height:1.8;}
+</style>
+</head>
+<body>
+
+<div id="loading" style="position:fixed;inset:0;z-index:99;display:flex;align-items:center;
+     justify-content:center;background:#0b0e14;color:#cbd5e1;font:15px/1.6 system-ui;
+     flex-direction:column;gap:8px">
+  <div>正在加载场景（17 MB / 66 万三角面）…</div>
+  <div id="loadMsg" style="color:#64748b;font-size:13px">首次加载需要 3~10 秒</div>
+</div>
+
+<header>
+  <div id="dot"></div>
+  <h1>RMUC2027 · 科技核心装配仿真</h1>
+  <div id="phaseTag">—</div>
+</header>
+
+<main>
+  <div class="stage">
+    <canvas id="cv"></canvas>
+    <div id="hud">
+      <div><span class="k">插入深度</span> <span class="v big" id="hDepth">0.0</span> <span class="u">mm</span></div>
+      <div><span class="k">P 轴</span> <span class="v" id="hP">0.0</span><span class="u">°</span>
+           &nbsp;<span class="k">Q 轴</span> <span class="v" id="hQ">0.0</span><span class="u">°</span></div>
+      <div><span class="k">夹持力</span> <span class="v" id="hGrip">0.0</span> <span class="u">N</span>
+           &nbsp;<span class="k">循环</span> <span class="v" id="hCycle">0</span></div>
+      <div><span class="k">fps</span> <span id="hFps">—</span>
+           &nbsp;<span class="k">延迟</span> <span id="hLat">—</span><span class="u">ms</span></div>
+    </div>
+  </div>
+
+  <aside>
+    <div class="sec">
+      <h2>任务</h2>
+      <div class="btns">
+        <button id="btnPlay">播放</button>
+        <button id="btnPause">暂停</button>
+        <button id="btnReset">复位</button>
+      </div>
+      <div class="btns">
+        <button id="btnManual">手动接管</button>
+      </div>
+    </div>
+
+    <div class="sec">
+      <h2>关节（手动）</h2>
+      <div id="sliders"></div>
+    </div>
+
+    <div class="sec">
+      <h2>核心 / 磁吸</h2>
+      <div id="coresliders"></div>
+      <div class="btns">
+        <button id="btnLock">磁吸 关</button>
+      </div>
+      <div class="row" style="margin-top:10px">
+        <div class="lab"><span>插入深度</span><span id="vCoreDepth">—</span></div>
+        <div class="lab"><span>轴对齐误差</span><span id="vCoreAxis">—</span></div>
+      </div>
+    </div>
+
+    <div class="keyhelp">
+      <b>键盘</b><br>
+      <b>1~6</b> 选关节 · <b>↑/↓</b> 微调 · <b>Shift</b> ×5<br>
+      <b>C / V</b> 夹爪 合 / 开<br>
+      <b>空格</b> 播放 / 暂停 · <b>R</b> 复位 · <b>M</b> 手动
+    </div>
+
+    <div class="foot">左键拖动 旋转 · 右键 平移 · 滚轮 缩放</div>
+  </aside>
+</main>
+
+<script type="module">
+import * as THREE from './vendor/three.module.js';
+
+const cv = document.getElementById('cv');
+const dot = document.getElementById('dot');
+const hDepth = document.getElementById('hDepth');
+const hP = document.getElementById('hP');
+const hQ = document.getElementById('hQ');
+const hGrip = document.getElementById('hGrip');
+const hCycle = document.getElementById('hCycle');
+const hFps = document.getElementById('hFps');
+const hLat = document.getElementById('hLat');
+const phaseTag = document.getElementById('phaseTag');
+
+const renderer = new THREE.WebGLRenderer({canvas: cv, antialias: true});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0a0d12);
+
+const camera = new THREE.PerspectiveCamera(45, 1, 0.01, 100);
+camera.up.set(0, 0, 1);
+
+scene.add(new THREE.HemisphereLight(0xbcd3ff, 0x1a2027, 1.05));
+const key = new THREE.DirectionalLight(0xffffff, 2.2);
+key.position.set(1.4, -1.6, 2.6);
+key.castShadow = true;
+key.shadow.mapSize.set(2048, 2048);
+const sc = key.shadow.camera;
+sc.left = -1.2; sc.right = 1.2; sc.top = 1.2; sc.bottom = -1.2; sc.near = 0.1; sc.far = 8;
+scene.add(key);
+const fill = new THREE.DirectionalLight(0x88aaff, 0.55);
+fill.position.set(-1.5, 1.2, 1.0);
+scene.add(fill);
+
+const floor = new THREE.Mesh(
+  new THREE.PlaneGeometry(6, 6),
+  new THREE.MeshStandardMaterial({color: 0x141a22, roughness: 1.0}));
+floor.position.z = -0.002;
+floor.receiveShadow = true;
+scene.add(floor);
+
+const grid = new THREE.GridHelper(4, 40, 0x27394a, 0x1a2530);
+grid.rotation.x = Math.PI / 2;
+grid.position.z = -0.001;
+scene.add(grid);
+
+// ---------------------------------------------------------------- 相机
+let az = 35 * Math.PI / 180, el = -18 * Math.PI / 180, dist = 1.05;
+const lookat = new THREE.Vector3(0.33, 0.02, 0.30);
+
+function updateCamera() {
+  const d = new THREE.Vector3(Math.cos(el) * Math.cos(az), Math.cos(el) * Math.sin(az), Math.sin(el));
+  camera.position.copy(lookat).addScaledVector(d, -dist);
+  camera.lookAt(lookat);
+}
+
+let drag = null;
+cv.addEventListener('pointerdown', e => { drag = {x: e.clientX, y: e.clientY, b: e.button}; cv.setPointerCapture(e.pointerId); });
+cv.addEventListener('pointerup', () => { drag = null; });
+cv.addEventListener('pointermove', e => {
+  if (!drag) return;
+  const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+  drag.x = e.clientX; drag.y = e.clientY;
+  if (drag.b === 0) {
+    az -= dx * 0.006;
+    el = Math.max(-1.45, Math.min(1.45, el + dy * 0.004));
+  } else {
+    const right = new THREE.Vector3(-Math.sin(az), Math.cos(az), 0).multiplyScalar(-dx * 0.0012 * dist);
+    const upv = new THREE.Vector3(-Math.cos(el) * Math.cos(az), -Math.cos(el) * Math.sin(az), Math.cos(el))
+                  .multiplyScalar(dy * 0.0012 * dist);
+    lookat.add(right).add(upv);
+  }
+  updateCamera();
+});
+cv.addEventListener('wheel', e => {
+  e.preventDefault();
+  dist = Math.max(0.15, Math.min(4, dist * (e.deltaY > 0 ? 1.1 : 0.9)));
+  updateCamera();
+}, {passive: false});
+
+// ---------------------------------------------------------------- 模型
+function b64buf(s) {
+  const bin = atob(s), n = bin.length, u8 = new Uint8Array(n);
+  for (let i = 0; i < n; i++) u8[i] = bin.charCodeAt(i);
+  return u8.buffer;
+}
+
+let bodyNodes = [], nBody = 0;
+let N = 8;
+let LIMITS = [[-3, 3], [-3, 3], [-3, 3], [-3, 3], [-3, 3], [-3, 3], [-0.03, 0.03], [-0.03, 0.03]];
+let NAMES = [];
+const TARGET = new Array(N).fill(0);
+
+async function loadScene() {
+  const meta = await (await fetch('/scene.json')).json();
+  nBody = meta.nbody;
+  NAMES = meta.actuator_names || [];
+  if (meta.ctrl_range && meta.ctrl_range.length) {
+    LIMITS = meta.ctrl_range.map(r => (Math.abs(r[1] - r[0]) < 1e-6) ? [-Math.PI, Math.PI] : r);
+    N = LIMITS.length;
+    // 执行器数量会随模型变（8→13），TARGET 必须跟着扩充，否则 TARGET[i] 是 undefined
+    TARGET.length = N;
+    for (let i = 0; i < N; i++) if (TARGET[i] === undefined) TARGET[i] = 0;
+  }
+  for (const g of meta.geoms) {
+    if (g.type === 'plane') continue;
+    const rgb = g.rgba.slice(0, 3).map(v => Math.min(1, v * 1.6));
+    const mat = new THREE.MeshStandardMaterial({
+      color: new THREE.Color(rgb[0], rgb[1], rgb[2]),
+      metalness: 0.25, roughness: 0.55,
+      transparent: g.rgba[3] < 0.99, opacity: g.rgba[3],
+    });
+    let mesh = null;
+    if (g.type === 'mesh') {
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(b64buf(g.v)), 3));
+      geo.setIndex(new THREE.BufferAttribute(new Uint32Array(b64buf(g.f)), 1));
+      geo.computeVertexNormals();
+      mesh = new THREE.Mesh(geo, mat);
+    } else if (g.type === 'box') {
+      mesh = new THREE.Mesh(new THREE.BoxGeometry(g.size[0] * 2, g.size[1] * 2, g.size[2] * 2), mat);
+    } else if (g.type === 'sphere') {
+      mesh = new THREE.Mesh(new THREE.SphereGeometry(g.size[0], 20, 14), mat);
+    } else if (g.type === 'cylinder') {
+      mesh = new THREE.Mesh(new THREE.CylinderGeometry(g.size[0], g.size[0], g.size[1] * 2, 20), mat);
+      mesh.rotation.x = Math.PI / 2;
+    } else if (g.type === 'capsule') {
+      mesh = new THREE.Mesh(new THREE.CapsuleGeometry(g.size[0], g.size[1] * 2, 8, 16), mat);
+      mesh.rotation.x = Math.PI / 2;
+    }
+    if (!mesh) continue;
+    mesh.position.set(g.pos[0], g.pos[1], g.pos[2]);
+    mesh.quaternion.set(g.quat[1], g.quat[2], g.quat[3], g.quat[0]);
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+    (bodyNodes[g.body] ||= []).push(mesh);
+  }
+
+  const nodes = [];
+  for (let b = 0; b < nBody; b++) {
+    const grp = new THREE.Group();
+    scene.add(grp);
+    (bodyNodes[b] || []).forEach(m => grp.add(m));
+    nodes.push(grp);
+  }
+  bodyNodes = nodes;
+
+  if (meta.camera) {
+    az = meta.camera.azimuth * Math.PI / 180;
+    el = meta.camera.elevation * Math.PI / 180;
+    dist = meta.camera.distance;
+    lookat.set(...meta.camera.lookat);
+  }
+  updateCamera();
+  buildSliders();
+  buildCoreSliders();
+}
+
+// ---------------------------------------------------------------- 滑块
+const box = document.getElementById('sliders');
+const inputs = [];
+let manual = false, dragging = false;
+
+function buildSliders() {
+  box.innerHTML = '';
+  inputs.length = 0;
+  for (let i = 0; i < N; i++) {
+    const row = document.createElement('div');
+    row.className = 'row';
+    const nm = (NAMES[i] || ('j' + i));
+    row.innerHTML = `<div class="lab"><span>${nm}</span><span id="v${i}">0.000</span></div>
+                     <input type="range" step="0.001">`;
+    box.appendChild(row);
+    const inp = row.querySelector('input');
+    inp.min = LIMITS[i][0]; inp.max = LIMITS[i][1]; inp.value = 0;
+    inputs.push(inp);
+    inp.addEventListener('pointerdown', () => dragging = true);
+    inp.addEventListener('pointerup', () => dragging = false);
+    inp.addEventListener('input', () => {
+      TARGET[i] = +inp.value;
+      document.getElementById('v' + i).textContent = TARGET[i].toFixed(3);
+      if (!manual) setManual(true);
+      scheduleSend();
+    });
+  }
+  syncSliders();
+}
+
+function syncSliders() {
+  for (let i = 0; i < N; i++) {
+    if (!inputs[i] || dragging) continue;
+    inputs[i].value = TARGET[i];
+    document.getElementById('v' + i).textContent = TARGET[i].toFixed(3);
+  }
+}
+
+let sendTimer = null;
+const CORE_TARGET = [0.0, 0.0, 0.0];
+let lockOn = false;
+function scheduleSend() {
+  if (sendTimer) return;
+  sendTimer = setTimeout(() => {
+    sendTimer = null;
+    const q = '/set?j=' + TARGET.map(v => v.toFixed(4)).join(',')
+      + '&c=' + CORE_TARGET.map(v => v.toFixed(4)).join(',')
+      + '&lock=' + (lockOn ? 1 : 0);
+    fetch(q).catch(() => {});
+  }, 33);
+}
+
+function buildCoreSliders() {
+  const box = document.getElementById('coresliders');
+  const defs = [['c1 (升降)', 0.0, 0.10], ['c2 (P)', 0.0, 1.5708], ['c3 (Q)', -1.5708, 1.5708]];
+  box.innerHTML = '';
+  defs.forEach(([nm, lo, hi], i) => {
+    const row = document.createElement('div');
+    row.className = 'row';
+    row.innerHTML = `<div class="lab"><span>${nm}</span><span id="cv${i}">0.000</span></div>
+                     <input type="range" step="0.001" min="${lo}" max="${hi}">`;
+    box.appendChild(row);
+    const inp = row.querySelector('input');
+    inp.value = 0;
+    inp.addEventListener('input', () => {
+      CORE_TARGET[i] = +inp.value;
+      document.getElementById('cv' + i).textContent = CORE_TARGET[i].toFixed(3);
+      if (!manual) setManual(true);
+      scheduleSend();
+    });
+  });
+}
+
+function setManual(on) {
+  manual = on;
+  document.getElementById('btnManual').classList.toggle('active', manual);
+  fetch('/mode?manual=' + (manual ? 1 : 0)).catch(() => {});
+}
+
+// ---------------------------------------------------------------- 轮询
+async function pollPose() {
+  try {
+    const r = await fetch('/pose');
+    const d = await r.json();
+    for (let b = 0; b < nBody; b++) {
+      const p = d.b[b];
+      if (!p) continue;
+      bodyNodes[b].position.set(p[0], p[1], p[2]);
+      bodyNodes[b].quaternion.set(p[4], p[5], p[6], p[3]);
+    }
+    dot.classList.add('on');
+  } catch (e) { dot.classList.remove('on'); }
+}
+
+let PHASE_NAMES = ['home', 'pre', 'approach', 'close', 'settle', 'lift', 'hold', 'roll',
+  'staging', 'insert', 'insert-hold', 'insert2', 'P', 'retreat', 'Q', 'done'];
+// 阶段名以物理端为准（唯一来源），拿不到再退回上面的默认值
+fetch('/phases').then(r => r.json()).then(j => { if (j.phases && j.phases.length) PHASE_NAMES = j.phases; }).catch(() => {});
+
+async function pollState() {
+  try {
+    const s = await (await fetch('/state')).json();
+    hFps.textContent = s.fps.toFixed(0);
+    hLat.textContent = s.latency.toFixed(0);
+    const t = s.task || {};
+    phaseTag.textContent = (PHASE_NAMES[t.phase || 0] || '—').toUpperCase()
+      + (t.playing ? ' · RUN' : ' · IDLE');
+    hDepth.textContent = Math.max(0, t.depth || 0).toFixed(1);
+    hP.textContent = (t.p_deg || 0).toFixed(1);
+    hQ.textContent = (t.q_deg || 0).toFixed(1);
+    hGrip.textContent = (t.grip || 0).toFixed(1);
+    hCycle.textContent = t.cycle || 0;
+    // 核心/磁吸面板
+    const dv = document.getElementById('vCoreDepth');
+    const av = document.getElementById('vCoreAxis');
+    if (dv) {
+      const ok = (t.depth > 95) && (t.axis < 3);
+      dv.textContent = (t.depth || 0).toFixed(1) + ' mm' + (ok ? ' ✅到位' : '');
+      dv.style.color = ok ? '#4ade80' : '';
+      av.textContent = (t.axis || 0).toFixed(1) + '°' + (ok ? '' : (t.axis < 3 ? '' : ' ⚠偏'));
+      av.style.color = (t.axis < 3) ? '' : '#ef4444';
+    }
+    const bl = document.getElementById('btnLock');
+    if (bl) {
+      bl.textContent = t.lock ? '磁吸 开' : '磁吸 关';
+      bl.classList.toggle('active', !!t.lock);
+    }
+    if (!s.manual && !dragging && s.ctrl) {
+      for (let i = 0; i < N; i++) if (s.ctrl[i] !== undefined) TARGET[i] = s.ctrl[i];
+      syncSliders();
+    }
+  } catch (e) {}
+}
+
+document.getElementById('btnPlay').onclick = () => {
+  setManual(false);
+  fetch('/task?cmd=play').catch(() => {});
+};
+document.getElementById('btnPause').onclick = () => { setManual(true); };
+document.getElementById('btnReset').onclick = () => {
+  setManual(false);
+  fetch('/task?cmd=reset').catch(() => {});
+};
+document.getElementById('btnManual').onclick = () => setManual(!manual);
+document.getElementById('btnLock').onclick = () => {
+  lockOn = !lockOn;
+  if (!manual) setManual(true);
+  scheduleSend();
+};
+
+// ---------------------------------------------------------------- 键盘
+const keys = new Set();
+let sel = 0;
+window.addEventListener('keydown', e => {
+  const k = e.key.toLowerCase();
+  if (k === ' ') { e.preventDefault(); fetch('/task?cmd=play'); return; }
+  if (k === 'r') { e.preventDefault(); fetch('/task?cmd=reset'); return; }
+  if (k === 'm') { e.preventDefault(); setManual(!manual); return; }
+  if (k >= '1' && k <= '6') { sel = +k - 1; return; }
+  if (k === 'c' || k === 'v' || k === 'arrowup' || k === 'arrowdown' || k === 'shift') {
+    e.preventDefault(); keys.add(k);
+    if (!manual) setManual(true);
+    return;
+  }
+});
+window.addEventListener('keyup', e => keys.delete(e.key.toLowerCase()));
+
+let lastT = performance.now();
+function tick(now) {
+  const dt = Math.min(0.05, (now - lastT) / 1000);
+  lastT = now;
+  if (manual && keys.size) {
+    const sp = (keys.has('shift') ? 5 : 1) * 1.2 * dt;
+    if (keys.has('arrowup')) TARGET[sel] += sp;
+    if (keys.has('arrowdown')) TARGET[sel] -= sp;
+    if (keys.has('c')) { TARGET[6] = Math.min(0.03, TARGET[6] + sp * 0.05); TARGET[7] = Math.max(-0.03, TARGET[7] - sp * 0.05); }
+    if (keys.has('v')) { TARGET[6] = Math.max(-0.03, TARGET[6] - sp * 0.05); TARGET[7] = Math.min(0.03, TARGET[7] + sp * 0.05); }
+    for (let i = 0; i < N; i++) TARGET[i] = Math.max(LIMITS[i][0], Math.min(LIMITS[i][1], TARGET[i]));
+    syncSliders();
+    scheduleSend();
+  }
+  renderer.render(scene, camera);
+  requestAnimationFrame(tick);
+}
+
+// ---------------------------------------------------------------- 启动
+function resize() {
+  const w = cv.clientWidth, h = cv.clientHeight;
+  if (cv.width !== w || cv.height !== h) {
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+  }
+}
+window.addEventListener('resize', resize);
+
+loadScene().then(() => {
+  resize();
+  updateCamera();
+  setInterval(pollPose, 1000 / 60);
+  setInterval(pollState, 200);
+  requestAnimationFrame(tick);
+  const lo = document.getElementById('loading');
+  if (lo) lo.style.display = 'none';
+}).catch((e) => {
+  const m = document.getElementById('loadMsg');
+  if (m) { m.textContent = '加载失败：' + (e && e.message ? e.message : e); m.style.color = '#ef4444'; }
+  console.error(e);
+});
+</script>
+</body>
+</html>

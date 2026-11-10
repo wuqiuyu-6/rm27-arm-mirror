@@ -1,0 +1,295 @@
+﻿<mujoco model="arm_core_physical">
+  <compiler angle="radian" autolimits="true"/>
+  <option timestep="0.001" cone="elliptic" impratio="10" iterations="50"/>
+  <visual>
+    <global offwidth="1120" offheight="840" fovy="45"/>
+    <headlight diffuse="0.62 0.62 0.66" ambient="0.36 0.38 0.42" specular="0.12 0.12 0.12"/>
+  </visual>
+  <asset>
+    <texture name="sky" type="skybox" builtin="gradient" rgb1="0.20 0.28 0.38" rgb2="0.02 0.03 0.04" width="512" height="3072"/>
+    <texture name="grid" type="2d" builtin="checker" width="300" height="300"
+             rgb1="0.17 0.21 0.25" rgb2="0.09 0.12 0.15" mark="edge" markrgb="0.30 0.42 0.52"/>
+    <material name="gridmat" texture="grid" texrepeat="8 8" texuniform="true"/>
+    <material name="ped" rgba="0.28 0.31 0.36 1"/>
+    <mesh name="a_base_link" file="../arm_v7/meshes/base_link.STL"/>
+    <mesh name="a_link1" file="../arm_v7/meshes/link1.STL"/>
+    <mesh name="a_link2" file="../arm_v7/meshes/link2.STL"/>
+    <mesh name="a_link3" file="../arm_v7/meshes/link3.STL"/>
+    <mesh name="a_link4" file="../arm_v7/meshes/link4.STL"/>
+    <mesh name="a_link5" file="../arm_v7/meshes/link5.STL"/>
+    <mesh name="a_link6" file="../arm_v7/meshes/link6.STL"/>
+    <mesh name="c_base_link" file="../core3/meshes/base_link.STL"/>
+    <mesh name="c_link1" file="../core3/meshes/link1.STL"/>
+    <mesh name="c_link2" file="../core3/meshes/link2.STL"/>
+    <mesh name="c_link3" file="../core3/meshes/link3.STL"/>
+    <mesh name="g_palm" file="../physical/meshes/c_link6_palm.obj"/>
+    <mesh name="g_finger_l" file="../physical/meshes/c_finger_l.obj"/>
+    <mesh name="g_finger_r" file="../physical/meshes/c_finger_r.obj"/>
+    <mesh name="unit" file="../energy_unit.stl"/>
+    <mesh name="col_00" file="../collision/col_00.stl"/>
+    <mesh name="col_01" file="../collision/col_01.stl"/>
+    <mesh name="col_02" file="../collision/col_02.stl"/>
+    <mesh name="col_03" file="../collision/col_03.stl"/>
+    <mesh name="col_04" file="../collision/col_04.stl"/>
+    <mesh name="col_05" file="../collision/col_05.stl"/>
+    <mesh name="col_06" file="../collision/col_06.stl"/>
+    <mesh name="col_07" file="../collision/col_07.stl"/>
+    <mesh name="col_08" file="../collision/col_08.stl"/>
+    <mesh name="col_09" file="../collision/col_09.stl"/>
+    <mesh name="col_10" file="../collision/col_10.stl"/>
+    <mesh name="col_11" file="../collision/col_11.stl"/>
+    <mesh name="col_12" file="../collision/col_12.stl"/>
+    <mesh name="col_13" file="../collision/col_13.stl"/>
+    <mesh name="col_14" file="../collision/col_14.stl"/>
+    <mesh name="col_15" file="../collision/col_15.stl"/>
+    <mesh name="col_16" file="../collision/col_16.stl"/>
+    <mesh name="col_17" file="../collision/col_17.stl"/>
+    <mesh name="col_18" file="../collision/col_18.stl"/>
+    <mesh name="col_19" file="../collision/col_19.stl"/>
+    <mesh name="col_20" file="../collision/col_20.stl"/>
+    <mesh name="col_21" file="../collision/col_21.stl"/>
+    <mesh name="col_22" file="../collision/col_22.stl"/>
+    <mesh name="col_23" file="../collision/col_23.stl"/>
+    <mesh name="col_24" file="../collision/col_24.stl"/>
+    <mesh name="col_25" file="../collision/col_25.stl"/>
+    <mesh name="col_26" file="../collision/col_26.stl"/>
+    <mesh name="col_27" file="../collision/col_27.stl"/>
+    <mesh name="col_28" file="../collision/col_28.stl"/>
+    <mesh name="col_29" file="../collision/col_29.stl"/>
+    <mesh name="col_30" file="../collision/col_30.stl"/>
+    <mesh name="col_31" file="../collision/col_31.stl"/>
+    <mesh name="col_32" file="../collision/col_32.stl"/>
+    <mesh name="col_33" file="../collision/col_33.stl"/>
+    <mesh name="col_34" file="../collision/col_34.stl"/>
+    <mesh name="col_35" file="../collision/col_35.stl"/>
+    <mesh name="col_36" file="../collision/col_36.stl"/>
+    <mesh name="col_37" file="../collision/col_37.stl"/>
+    <mesh name="col_38" file="../collision/col_38.stl"/>
+    <mesh name="col_39" file="../collision/col_39.stl"/>
+    <mesh name="col_40" file="../collision/col_40.stl"/>
+    <mesh name="col_41" file="../collision/col_41.stl"/>
+    <mesh name="col_42" file="../collision/col_42.stl"/>
+    <mesh name="col_43" file="../collision/col_43.stl"/>
+    <mesh name="col_44" file="../collision/col_44.stl"/>
+    <mesh name="col_45" file="../collision/col_45.stl"/>
+    <mesh name="col_46" file="../collision/col_46.stl"/>
+    <mesh name="col_47" file="../collision/col_47.stl"/>
+  </asset>
+  <worldbody>
+    <light pos="1.5 -1.5 2.5" dir="-0.5 0.5 -1" directional="true" diffuse="0.80 0.80 0.80"/>
+    <light pos="-1.2 1.2 1.6" dir="0.5 -0.4 -1" directional="true" diffuse="0.35 0.35 0.42"/>
+    <body name="pedestal" pos="0.42 -0.19 0.07">
+      <geom type="box" size="0.075 0.075 0.07" material="ped"
+            contype="1" conaffinity="1" friction="1 0.05 0.001"/>
+    </body>
+
+    <geom name="floor" type="plane" size="0 0 0.05" material="gridmat"
+          contype="1" conaffinity="1" friction="1 0.05 0.001"/>
+
+    <!-- 鏈烘鑷傚簳搴у彴瀛愶細鍨珮 120 mm锛岃噦鏁翠綋鍐嶆湞鏍稿績鏂瑰悜鎸?100 mm -->
+    <geom name="arm_stand" type="box" size="0.115 0.115 0.0600"
+          pos="0.0000 0.1000 0.0600"
+          material="ped" contype="1" conaffinity="1" friction="1 0.05 0.001"/>
+
+    <body name="unit" pos="0.42 -0.19 0.14400000000000002">
+      <freejoint name="unit_free"/>
+      <inertial pos="0 0 0.075" mass="0.400" diaginertia="0.00046 0.00086 0.00086"/>
+      <!-- 瑙嗚锛氫笉纰版挒銆佹棤璐ㄩ噺 -->
+      <geom type="mesh" mesh="unit" rgba="1 0.82 0.22 1"
+            contype="0" conaffinity="0" density="0"/>
+      <!-- 纰版挒锛?8 鍧楀嚫鍒嗚В锛屼笉鍙锛岃川閲忓湪杩欓噷 -->
+      <geom type="mesh" mesh="col_00" contype="1" conaffinity="4" density="0" mass="0.008333"/>
+      <geom type="mesh" mesh="col_01" contype="1" conaffinity="4" density="0" mass="0.008333"/>
+      <geom type="mesh" mesh="col_02" contype="1" conaffinity="4" density="0" mass="0.008333"/>
+      <geom type="mesh" mesh="col_03" contype="1" conaffinity="4" density="0" mass="0.008333"/>
+      <geom type="mesh" mesh="col_04" contype="1" conaffinity="4" density="0" mass="0.008333"/>
+      <geom type="mesh" mesh="col_05" contype="1" conaffinity="4" density="0" mass="0.008333"/>
+      <geom type="mesh" mesh="col_06" contype="1" conaffinity="4" density="0" mass="0.008333"/>
+      <geom type="mesh" mesh="col_07" contype="1" conaffinity="4" density="0" mass="0.008333"/>
+      <geom type="mesh" mesh="col_08" contype="1" conaffinity="4" density="0" mass="0.008333"/>
+      <geom type="mesh" mesh="col_09" contype="1" conaffinity="4" density="0" mass="0.008333"/>
+      <geom type="mesh" mesh="col_10" contype="1" conaffinity="4" density="0" mass="0.008333"/>
+      <geom type="mesh" mesh="col_11" contype="1" conaffinity="4" density="0" mass="0.008333"/>
+      <geom type="mesh" mesh="col_12" contype="1" conaffinity="4" density="0" mass="0.008333"/>
+      <geom type="mesh" mesh="col_13" contype="1" conaffinity="4" density="0" mass="0.008333"/>
+      <geom type="mesh" mesh="col_14" contype="1" conaffinity="4" density="0" mass="0.008333"/>
+      <geom type="mesh" mesh="col_15" contype="1" conaffinity="4" density="0" mass="0.008333"/>
+      <geom type="mesh" mesh="col_16" contype="1" conaffinity="4" density="0" mass="0.008333"/>
+      <geom type="mesh" mesh="col_17" contype="1" conaffinity="4" density="0" mass="0.008333"/>
+      <geom type="mesh" mesh="col_18" contype="1" conaffinity="4" density="0" mass="0.008333"/>
+      <geom type="mesh" mesh="col_19" contype="1" conaffinity="4" density="0" mass="0.008333"/>
+      <geom type="mesh" mesh="col_20" contype="1" conaffinity="4" density="0" mass="0.008333"/>
+      <geom type="mesh" mesh="col_21" contype="1" conaffinity="4" density="0" mass="0.008333"/>
+      <geom type="mesh" mesh="col_22" contype="1" conaffinity="4" density="0" mass="0.008333"/>
+      <geom type="mesh" mesh="col_23" contype="1" conaffinity="4" density="0" mass="0.008333"/>
+      <geom type="mesh" mesh="col_24" contype="1" conaffinity="4" density="0" mass="0.008333"/>
+      <geom type="mesh" mesh="col_25" contype="1" conaffinity="4" density="0" mass="0.008333"/>
+      <geom type="mesh" mesh="col_26" contype="1" conaffinity="4" density="0" mass="0.008333"/>
+      <geom type="mesh" mesh="col_27" contype="1" conaffinity="4" density="0" mass="0.008333"/>
+      <geom type="mesh" mesh="col_28" contype="1" conaffinity="4" density="0" mass="0.008333"/>
+      <geom type="mesh" mesh="col_29" contype="1" conaffinity="4" density="0" mass="0.008333"/>
+      <geom type="mesh" mesh="col_30" contype="1" conaffinity="4" density="0" mass="0.008333"/>
+      <geom type="mesh" mesh="col_31" contype="1" conaffinity="4" density="0" mass="0.008333"/>
+      <geom type="mesh" mesh="col_32" contype="1" conaffinity="4" density="0" mass="0.008333"/>
+      <geom type="mesh" mesh="col_33" contype="1" conaffinity="4" density="0" mass="0.008333"/>
+      <geom type="mesh" mesh="col_34" contype="1" conaffinity="4" density="0" mass="0.008333"/>
+      <geom type="mesh" mesh="col_35" contype="1" conaffinity="4" density="0" mass="0.008333"/>
+      <geom type="mesh" mesh="col_36" contype="1" conaffinity="4" density="0" mass="0.008333"/>
+      <geom type="mesh" mesh="col_37" contype="1" conaffinity="4" density="0" mass="0.008333"/>
+      <geom type="mesh" mesh="col_38" contype="1" conaffinity="4" density="0" mass="0.008333"/>
+      <geom type="mesh" mesh="col_39" contype="1" conaffinity="4" density="0" mass="0.008333"/>
+      <geom type="mesh" mesh="col_40" contype="1" conaffinity="4" density="0" mass="0.008333"/>
+      <geom type="mesh" mesh="col_41" contype="1" conaffinity="4" density="0" mass="0.008333"/>
+      <geom type="mesh" mesh="col_42" contype="1" conaffinity="4" density="0" mass="0.008333"/>
+      <geom type="mesh" mesh="col_43" contype="1" conaffinity="4" density="0" mass="0.008333"/>
+      <geom type="mesh" mesh="col_44" contype="1" conaffinity="4" density="0" mass="0.008333"/>
+      <geom type="mesh" mesh="col_45" contype="1" conaffinity="4" density="0" mass="0.008333"/>
+      <geom type="mesh" mesh="col_46" contype="1" conaffinity="4" density="0" mass="0.008333"/>
+      <geom type="mesh" mesh="col_47" contype="1" conaffinity="4" density="0" mass="0.008333"/>
+    </body>
+
+    <body name="core_stand" pos="0.3000 0.1700 0.1000">
+      <geom type="box" size="0.10 0.10 0.1000" material="ped"
+            contype="1" conaffinity="1" friction="1 0.05 0.001"/>
+    </body>
+
+    <body name="core_rig" pos="0.3000 0.1700 0.2000"
+          quat="1 0 0 0">
+      
+    <geom pos="0 0 0" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" rgba="0.46 0.48 0.52 1" mesh="c_base_link"/>
+    <body name="c_link1" pos="-0.0525 -0.0425 0.1625">
+      <inertial pos="0.0525 0 0" mass="0.010929" diaginertia="1.2824e-06 7.323e-07 7.323e-07"/>
+      <joint name="c_joint1" frictionloss="20" type="slide" range="0 0.1"/>
+      <geom pos="0 0 0" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" rgba="0.80 0.82 0.86 1" mesh="c_link1"/>
+      <body name="c_link2" pos="0.005 0 0" quat="0.707107 0 0.707107 0">
+        <inertial pos="0.030756 -0.0047588 0.0475" quat="0.72672 0 0 0.686934" mass="0.016662" diaginertia="2.4704e-05 2.2503e-05 3.3071e-06"/>
+        <joint name="c_joint2" frictionloss="0.5" range="0 1.5708" axis="0 0 -1"/>
+        <geom quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" rgba="0.62 0.65 0.70 1" mesh="c_link2"/>
+        <body name="c_link3" pos="0.0425 -0.005 0.0475" quat="0.707107 0 0.707107 0">
+          <inertial pos="0 -0.066139 0.047553" quat="0.76944 0.638719 0 0" mass="0.26547" diaginertia="0.00048569 0.000467877 0.000295603"/>
+          <joint name="c_joint3" frictionloss="0.5" range="-1.5708 1.5708"/>
+          <geom quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" rgba="0.70 0.72 0.76 1" mesh="c_link3"/>
+            <geom name="pin" type="cylinder" size="0.007 0.070"
+                  pos="0 -0.080 0.050" quat="0.707107 -0.707107 0 0"
+                  contype="0" conaffinity="0" friction="2 0.05 0.001"
+                  rgba="0.95 0.95 0.96 1"/>
+        </body>
+      </body>
+    </body>
+  
+    </body>
+
+    <body name="chassis" pos="0 0 0">
+      <inertial pos="0 0 0.08" mass="18.0" diaginertia="0.45 0.45 0.75"/>
+      <joint name="chassis_x" type="slide" axis="1 0 0" range="-1.6 1.6" damping="30"/>
+      <joint name="chassis_y" type="slide" axis="0 1 0" range="-1.6 1.6" damping="30"/>
+      <joint name="chassis_yaw" type="hinge" axis="0 0 1" range="-3.10 3.10" damping="30"/>
+      <geom name="chassis_box" type="box" size="0.16 0.16 0.06" pos="0 0 0.06"
+            rgba="0.30 0.33 0.38 1" contype="0" conaffinity="0"/>
+      <geom name="chassis_deck" type="box" size="0.15 0.15 0.012" pos="0 0 0.125"
+            rgba="0.42 0.45 0.50 1" contype="0" conaffinity="0"/>
+      <body name="fine_x" pos="0 0 0">
+        <inertial pos="0 0 0" mass="4.0" diaginertia="0.02 0.02 0.02"/>
+        <joint name="fine_x" type="slide" axis="1 0 0" range="-0.04 0.04" damping="20"/>
+        <body name="fine_y" pos="0 0 0">
+          <inertial pos="0 0 0" mass="3.0" diaginertia="0.015 0.015 0.015"/>
+          <joint name="fine_y" type="slide" axis="0 1 0" range="-0.04 0.04" damping="20"/>
+          <body name="arm_mount" pos="0.0000 0.1000 0.1200"
+                quat="0.995396 0 0 -0.095846">
+            
+    <geom pos="0 0 0" quat="1 0 0 0" type="mesh" rgba="0.40 0.42 0.46 1" mesh="a_base_link" contype="0" conaffinity="0"/>
+    <body name="link1">
+      <inertial pos="0.0007754 0.008139 0.072691" quat="0.505751 0.494146 0.496299 0.50371" mass="2.0106" diaginertia="0.00271802 0.00174795 0.00156493"/>
+      <joint name="joint1" armature="0.06" range="-1.7453 1.7453" axis="0 0 -1"/>
+      <geom quat="1 0 0 0" type="mesh" rgba="0.72 0.60 0.42 1" mesh="a_link1" contype="0" conaffinity="0"/>
+      <body name="link2" pos="0 0.064 0.085" quat="0.5 0.5 -0.5 0.5">
+        <inertial pos="0.30375 0.00023512 -0.028816" quat="0.00520192 0.707231 -0.0048584 0.706947" mass="2.2847" diaginertia="0.0062996 0.00514608 0.00128022"/>
+        <joint name="joint2" armature="0.06" range="-0.7854 1.3963"/>
+        <geom pos="0 0 0" quat="1 0 0 0" type="mesh" rgba="0.70 0.38 0.42 1" mesh="a_link2" contype="0" conaffinity="0"/>
+        <body name="link3" pos="0.36 0 0.023" quat="0.707105 0 0 -0.707108">
+          <inertial pos="0.077185 -9.0573e-07 0.040593" quat="-6.16239e-06 0.705065 8.27332e-06 0.709143" mass="0.84551" diaginertia="0.00165183 0.0015147 0.000684098"/>
+          <joint name="joint3" armature="0.06" range="0 1.2566" axis="0 0 -1"/>
+          <geom pos="0 0 0" quat="1 0 0 0" type="mesh" rgba="0.36 0.55 0.72 1" mesh="a_link3" contype="0" conaffinity="0"/>
+          <body name="link4" pos="0.177 0 0.041" quat="0.5 0.5 0.5 0.5">
+            <inertial pos="1.8123e-08 0.010567 0.07276" quat="0.707047 -0.00918651 0.00918706 0.707047" mass="0.44032" diaginertia="0.000651661 0.00058268 0.000205509"/>
+            <joint name="joint4" armature="0.15" axis="0 0 -1"/>
+            <geom quat="1 0 0 0" type="mesh" rgba="0.34 0.62 0.45 1" mesh="a_link4" contype="0" conaffinity="0"/>
+            <body name="link5" pos="0 0 0.126" quat="0.499998 0.5 -0.5 0.500002">
+              <inertial pos="0.019756 1.9185e-10 0.00063656" quat="0.999957 -1.0851e-06 -0.00932112 -1.18948e-07" mass="0.068873" diaginertia="5.12882e-05 4.6925e-05 2.47508e-05"/>
+              <joint name="joint5" armature="0.15" range="-1.7453 1.7453"/>
+              <geom quat="1 0 0 0" type="mesh" rgba="0.62 0.44 0.66 1" mesh="a_link5" contype="0" conaffinity="0"/>
+              <body name="link6" pos="0.036 0 0" quat="0.499998 0.5 0.500002 0.5">
+                <inertial pos="0.00011626 -1.7146e-10 0.090593" quat="1 9.87212e-09 7.75136e-10 1.63801e-05" mass="0.2041" diaginertia="6.0383e-05 3.5309e-05 3.4536e-05"/>
+                <joint name="joint6" armature="0.10" range="-3.4907 3.4907" axis="0 0 -1"/>
+                <geom type="mesh" rgba="0.30 0.66 0.68 1" mesh="g_palm"/>
+              <site name="grip" pos="0 0 0.140" size="0.006" rgba="1 0 0 1"/>
+              <body name="finger_l" pos="0 0 0">
+                <inertial pos="0 0.0401 0.1064" mass="0.03170"
+                          diaginertia="1e-5 1e-5 1e-5"/>
+                <joint name="finger_l" type="slide" axis="0 1 0"
+                       range="-0.010 0.026" damping="2" armature="0.002"/>
+                <geom type="mesh" mesh="g_finger_l" rgba="0.90 0.30 0.28 1"
+                      contype="1" conaffinity="1" friction="0.8 0.1 0.001"/>
+                <geom name="pad_l" type="box" size="0.017 0.004 0.020"
+                      pos="0 0.034 0.130" rgba="0.12 0.12 0.13 1"
+                      contype="1" conaffinity="1" friction="0.9 0.1 0.001"/>
+              </body>
+              <body name="finger_r" pos="0 0 0">
+                <inertial pos="0 -0.0401 0.1064" mass="0.03170"
+                          diaginertia="1e-5 1e-5 1e-5"/>
+                <joint name="finger_r" type="slide" axis="0 1 0"
+                       range="-0.026 0.010" damping="2" armature="0.002"/>
+                <geom type="mesh" mesh="g_finger_r" rgba="0.30 0.55 0.90 1"
+                      contype="1" conaffinity="1" friction="0.8 0.1 0.001"/>
+                <geom name="pad_r" type="box" size="0.017 0.004 0.020"
+                      pos="0 -0.034 0.130" rgba="0.12 0.12 0.13 1"
+                      contype="1" conaffinity="1" friction="0.9 0.1 0.001"/>
+              </body>
+              </body>
+            </body>
+          </body>
+        </body>
+      </body>
+    </body>
+  
+          </body>
+        </body>
+      </body>
+    </body>
+  </worldbody>
+
+  <equality>
+    <weld name="park" body1="world" body2="unit" active="true"
+          relpose="0.42 -0.19 0.14400000000000002 1 0 0 0"/>
+    <weld name="grasp" body1="finger_l" body2="unit" active="false"
+          relpose="0 0 0 1 0 0 0" solref="0.005 1" solimp="0.95 0.99 0.001"/>
+    <!-- 鎻掑埌浣嶅悗鐨勯攢瀛?纾佸惛閰嶅悎锛氬崟鍏?鈫?core3 鐨?link3锛堥攢瀛愭墍鍦ㄨ繛鏉嗭級 -->
+    <weld name="mount" body1="c_link3" body2="unit" active="false"
+          relpose="0 0 0 1 0 0 0" solref="0.004 1" solimp="0.95 0.99 0.001"/>
+  </equality>
+
+  <contact>
+    <!-- 鎵嬫寚涓庢墜鎺屾槸浠庡悓涓€鍧?link6 涓婂垏涓嬫潵鐨勶細鎵嬫寚寰€閲屾粦灏卞繀鐒舵彃杩涙墜鎺岀殑缃戞牸閲岋紝
+         杩欎笉鏄湡瀹炵鎾烇紝蹇呴』鎺掗櫎锛屽惁鍒欐墜鎸囧彧鑳介棴鍚堝埌 4 mm 宸﹀彸灏卞崱姝?-->
+    <exclude body1="link6" body2="finger_l"/>
+    <exclude body1="link6" body2="finger_r"/>
+    <exclude body1="finger_l" body2="finger_r"/>
+  </contact>
+
+  <actuator>
+    <position name="a1" joint="joint1" kp="3000" kv="200" inheritrange="1" forcerange="-300 300"/>
+    <position name="a2" joint="joint2" kp="4000" kv="250" inheritrange="1" forcerange="-400 400"/>
+    <position name="a3" joint="joint3" kp="3000" kv="200" inheritrange="1" forcerange="-300 300"/>
+    <position name="a4" joint="joint4" kp="1500" kv="120" forcerange="-150 150"/>
+    <position name="a5" joint="joint5" kp="1000" kv="100" inheritrange="1" forcerange="-80 80"/>
+    <position name="a6" joint="joint6" kp="600"  kv="70"  inheritrange="1" forcerange="-50 50"/>
+    <position name="fl" joint="finger_l" kp="900" kv="30" inheritrange="1" forcerange="-60 60"/>
+    <position name="fr" joint="finger_r" kp="900" kv="30" inheritrange="1" forcerange="-60 60"/>
+    <position name="ch_x" joint="chassis_x" kp="8000" kv="900" inheritrange="1" forcerange="-1500 1500"/>
+    <position name="ch_y" joint="chassis_y" kp="8000" kv="900" inheritrange="1" forcerange="-1500 1500"/>
+    <position name="ch_yaw" joint="chassis_yaw" kp="4000" kv="400" inheritrange="1" forcerange="-800 800"/>
+    <position name="fx" joint="fine_x" kp="6000" kv="600" inheritrange="1" forcerange="-800 800"/>
+    <position name="fy" joint="fine_y" kp="6000" kv="600" inheritrange="1" forcerange="-800 800"/>
+  </actuator>
+</mujoco>
+

@@ -10,3 +10,4 @@ dist/
 *.mp4
 docs/media/*.png
 !docs/media/example.png
+web/scene.json

@@ -1,0 +1,86 @@
+﻿<mujoco model="arm_v7_sim">
+  <compiler angle="radian" autolimits="true"
+            meshdir="meshes"/>
+  <option timestep="0.001" cone="elliptic" impratio="10"/>
+  <visual>
+    <global offwidth="1120" offheight="840" fovy="45"/>
+    <headlight diffuse="0.62 0.62 0.66" ambient="0.36 0.38 0.42" specular="0.12 0.12 0.12"/>
+  </visual>
+  <asset>
+    <texture name="sky" type="skybox" builtin="gradient" rgb1="0.20 0.28 0.38" rgb2="0.02 0.03 0.04" width="512" height="3072"/>
+    <texture name="grid" type="2d" builtin="checker" width="300" height="300"
+             rgb1="0.17 0.21 0.25" rgb2="0.09 0.12 0.15" mark="edge" markrgb="0.30 0.42 0.52"/>
+    <material name="gridmat" texture="grid" texrepeat="8 8" texuniform="true"/>
+    <mesh name="base_link" file="base_link.STL"/>
+    <mesh name="link1" file="link1.STL"/>
+    <mesh name="link2" file="link2.STL"/>
+    <mesh name="link3" file="link3.STL"/>
+    <mesh name="link4" file="link4.STL"/>
+    <mesh name="link5" file="link5.STL"/>
+    <mesh name="link6" file="link6.STL"/>
+  </asset>
+  <worldbody>
+    <light pos="1.5 -1.5 2.5" dir="-0.5 0.5 -1" directional="true" diffuse="0.80 0.80 0.80"/>
+    <light pos="-1.2 1.2 1.6" dir="0.5 -0.4 -1" directional="true" diffuse="0.35 0.35 0.42"/>
+    <geom name="floor" type="plane" size="0 0 0.05" material="gridmat"/>
+    
+    <geom pos="0 0 0" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" rgba="0.42 0.44 0.48 1" mesh="base_link"/>
+    <body name="link1">
+      <inertial pos="0.0007754 0.008139 0.072691" quat="0.505751 0.494146 0.496299 0.50371" mass="2.0106" diaginertia="0.00271802 0.00174795 0.00156493"/>
+      <joint name="joint1" range="-1.7453 1.7453" axis="0 0 -1"/>
+      <geom quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" rgba="0.72 0.60 0.42 1" mesh="link1"/>
+      <body name="link2" pos="0 0.064 0.085" quat="0.5 0.5 -0.5 0.5">
+        <inertial pos="0.30375 0.00023512 -0.028816" quat="0.00520192 0.707231 -0.0048584 0.706947" mass="2.2847" diaginertia="0.0062996 0.00514608 0.00128022"/>
+        <joint name="joint2" range="-0.7854 1.3963"/>
+        <geom pos="0 0 0" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" rgba="0.70 0.38 0.42 1" mesh="link2"/>
+        <body name="link3" pos="0.36 0 0.023" quat="0.707105 0 0 -0.707108">
+          <inertial pos="0.077185 -9.0573e-07 0.040593" quat="-6.16239e-06 0.705065 8.27332e-06 0.709143" mass="0.84551" diaginertia="0.00165183 0.0015147 0.000684098"/>
+          <joint name="joint3" range="0 1.2566" axis="0 0 -1"/>
+          <geom pos="0 0 0" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" rgba="0.36 0.55 0.72 1" mesh="link3"/>
+          <body name="link4" pos="0.177 0 0.041" quat="0.5 0.5 0.5 0.5">
+            <inertial pos="1.8123e-08 0.010567 0.07276" quat="0.707047 -0.00918651 0.00918706 0.707047" mass="0.44032" diaginertia="0.000651661 0.00058268 0.000205509"/>
+            <joint name="joint4" axis="0 0 -1"/>
+            <geom quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" rgba="0.34 0.62 0.45 1" mesh="link4"/>
+            <body name="link5" pos="0 0 0.126" quat="0.499998 0.5 -0.5 0.500002">
+              <inertial pos="0.019756 1.9185e-10 0.00063656" quat="0.999957 -1.0851e-06 -0.00932112 -1.18948e-07" mass="0.068873" diaginertia="5.12882e-05 4.6925e-05 2.47508e-05"/>
+              <joint name="joint5" range="-1.7453 1.7453"/>
+              <geom quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" rgba="0.62 0.44 0.66 1" mesh="link5"/>
+              <body name="link6" pos="0.036 0 0" quat="0.499998 0.5 0.500002 0.5">
+                <inertial pos="0.00011626 -1.7146e-10 0.090593" quat="1 9.87212e-09 7.75136e-10 1.63801e-05" mass="0.2041" diaginertia="6.0383e-05 3.5309e-05 3.4536e-05"/>
+                <joint name="joint6" range="-3.4907 3.4907" axis="0 0 -1"/>
+                <geom type="mesh" contype="0" conaffinity="0" rgba="0.30 0.66 0.68 1" mesh="link6"/>
+                <body name="gripper_base" pos="0 0 0.150">
+                  <inertial pos="0 0 0.012" mass="0.12" diaginertia="0.00008 0.00008 0.00005"/>
+                  <geom type="box" size="0.030 0.032 0.014" pos="0 0 0.014" rgba="0.30 0.32 0.36 1"/>
+                  <body name="finger_l" pos="0 0.026 0.032">
+                    <inertial pos="0 0 0.018" mass="0.03" diaginertia="0.00001 0.00001 0.00001"/>
+                    <joint name="finger_l" type="slide" axis="0 1 0" range="0 0.030" damping="2"/>
+                    <geom type="box" size="0.010 0.006 0.026" pos="0 0 0.026" rgba="0.86 0.32 0.30 1"/>
+                  </body>
+                  <body name="finger_r" pos="0 -0.026 0.032">
+                    <inertial pos="0 0 0.018" mass="0.03" diaginertia="0.00001 0.00001 0.00001"/>
+                    <joint name="finger_r" type="slide" axis="0 -1 0" range="0 0.030" damping="2"/>
+                    <geom type="box" size="0.010 0.006 0.026" pos="0 0 0.026" rgba="0.26 0.52 0.86 1"/>
+                  </body>
+                </body>
+
+              </body>
+            </body>
+          </body>
+        </body>
+      </body>
+    </body>
+  
+  </worldbody>
+  <actuator>
+    <position name="a1" joint="joint1" kp="300" kv="25" inheritrange="1" forcerange="-60 60"/>
+    <position name="a2" joint="joint2" kp="400" kv="30" inheritrange="1" forcerange="-80 80"/>
+    <position name="a3" joint="joint3" kp="300" kv="25" inheritrange="1" forcerange="-50 50"/>
+    <position name="a4" joint="joint4" kp="120" kv="10" forcerange="-20 20"/>
+    <position name="a5" joint="joint5" kp="60"  kv="6"  inheritrange="1" forcerange="-10 10"/>
+    <position name="a6" joint="joint6" kp="40"  kv="4"  inheritrange="1" forcerange="-6 6"/>
+    <position name="grip_l" joint="finger_l" kp="200" kv="5" inheritrange="1" forcerange="-40 40"/>
+    <position name="grip_r" joint="finger_r" kp="200" kv="5" inheritrange="1" forcerange="-40 40"/>
+  </actuator>
+</mujoco>
+

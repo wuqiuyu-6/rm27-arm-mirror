@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RM27 真机姿态镜像</title>
+<style>
+  :root {
+    --bg: #0b0e14; --panel: #141922; --line: #232b38;
+    --text: #d6dee8; --dim: #7b8798; --accent: #4ade80; --warn: #f59e0b; --bad: #ef4444;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text);
+               font: 14px/1.5 system-ui, "Segoe UI", "Microsoft YaHei", sans-serif; }
+  header { display: flex; align-items: center; gap: 16px; padding: 10px 18px;
+           border-bottom: 1px solid var(--line); background: var(--panel); }
+  header h1 { font-size: 16px; margin: 0; font-weight: 600; letter-spacing: .3px; }
+  #status { margin-left: auto; display: flex; gap: 14px; color: var(--dim); font-size: 13px; }
+  #status b { color: var(--text); font-weight: 600; }
+  main { display: grid; grid-template-columns: 1fr 320px; height: calc(100% - 49px); }
+  #view { position: relative; }
+  canvas { display: block; }
+  aside { border-left: 1px solid var(--line); background: var(--panel); overflow-y: auto; }
+  section { padding: 14px 16px; border-bottom: 1px solid var(--line); }
+  h2 { font-size: 13px; color: var(--dim); margin: 0 0 10px; font-weight: 600;
+       text-transform: uppercase; letter-spacing: .08em; }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  td { padding: 3px 0; }
+  td:last-child { text-align: right; font-weight: 600; }
+  .muted { color: var(--dim); }
+  .btns { display: flex; gap: 10px; }
+  button { flex: 1; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--line);
+           background: #1c2330; color: var(--text); font-size: 14px; cursor: pointer; }
+  button:hover { background: #232c3b; }
+  button.on { border-color: var(--accent); color: var(--accent); }
+  #gripState { margin-top: 10px; color: var(--dim); }
+  .ok { color: var(--accent); } .warn { color: var(--warn); } .bad { color: var(--bad); }
+  #hint { position: absolute; left: 16px; bottom: 14px; color: var(--dim); font-size: 12px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>RM27 · 真机姿态镜像</h1>
+  <div id="status">
+    <span>帧率 <b id="fps">—</b></span>
+    <span>串口 <b id="serial">—</b></span>
+    <span>帧数 <b id="frames">0</b></span>
+  </div>
+</header>
+
+<main>
+  <div id="view"><div id="hint">左键旋转 · 右键平移 · 滚轮缩放</div></div>
+  <aside>
+    <section>
+      <h2>关节角</h2>
+      <table>
+        <tbody id="joints"></tbody>
+      </table>
+    </section>
+    <section>
+      <h2>夹爪</h2>
+      <div class="btns">
+        <button id="btnOpen">打开</button>
+        <button id="btnClose">关闭</button>
+      </div>
+      <div id="gripState">—</div>
+    </section>
+    <section>
+      <h2>状态</h2>
+      <table>
+        <tbody>
+          <tr><td class="muted">串口</td><td id="sPort">—</td></tr>
+          <tr><td class="muted">仿真帧率</td><td id="sRate">—</td></tr>
+          <tr><td class="muted">关节顺序</td><td>J1 → J6</td></tr>
+        </tbody>
+      </table>
+    </section>
+  </aside>
+</main>
+
+<script type="module">
+import * as THREE from './vendor/three.module.js';
+
+const NAMES = ['joint1', 'joint2', 'joint3', 'joint4', 'joint5', 'joint6'];
+const view = document.getElementById('view');
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setClearColor(0x0b0e14, 1);
+view.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.add(new THREE.HemisphereLight(0xbdd7ff, 0x1b2330, 1.1));
+const key = new THREE.DirectionalLight(0xffffff, 1.4); key.position.set(2, -2, 3); scene.add(key);
+const fill = new THREE.DirectionalLight(0x88aaff, 0.6); fill.position.set(-2, 1, 1); scene.add(fill);
+
+const camera = new THREE.PerspectiveCamera(45, 1, 0.01, 100);
+const grid = new THREE.GridHelper(4, 40, 0x2a3546, 0x1a2230);
+scene.add(grid);
+
+let bodyNodes = [], meta = null, pivot = new THREE.Group();
+scene.add(pivot);
+
+const orbit = { yaw: 2.35, pitch: -0.25, dist: 1.35, target: new THREE.Vector3(0.15, 0, 0.3) };
+
+function applyCamera() {
+  const c = Math.cos(orbit.pitch), s = Math.sin(orbit.pitch);
+  const x = orbit.target.x + orbit.dist * c * Math.sin(orbit.yaw);
+  const y = orbit.target.y - orbit.dist * c * Math.cos(orbit.yaw);
+  const z = orbit.target.z + orbit.dist * s;
+  camera.position.set(x, y, z);
+  camera.lookAt(orbit.target);
+}
+applyCamera();
+
+let drag = null;
+renderer.domElement.addEventListener('pointerdown', e => { drag = { x: e.clientX, y: e.clientY, b: e.button }; });
+window.addEventListener('pointerup', () => { drag = null; });
+window.addEventListener('pointermove', e => {
+  if (!drag) return;
+  const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+  drag.x = e.clientX; drag.y = e.clientY;
+  if (drag.b === 0) { orbit.yaw += dx * 0.01; orbit.pitch = Math.max(-1.4, Math.min(1.4, orbit.pitch + dy * 0.01)); }
+  else { orbit.target.x -= dx * 0.002; orbit.target.z += dy * 0.002; }
+  applyCamera();
+});
+renderer.domElement.addEventListener('contextmenu', e => e.preventDefault());
+renderer.domElement.addEventListener('wheel', e => {
+  orbit.dist = Math.max(0.3, Math.min(4, orbit.dist * (1 + Math.sign(e.deltaY) * 0.1)));
+  applyCamera(); e.preventDefault();
+}, { passive: false });
+
+function buildMesh(g) {
+  if (g.type === 'mesh') {
+    const verts = new Float32Array(Uint8Array.from(atob(g.v), c => c.charCodeAt(0)).buffer);
+    const faces = new Uint32Array(Uint8Array.from(atob(g.f), c => c.charCodeAt(0)).buffer);
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(verts, 3));
+    geo.setIndex(new THREE.BufferAttribute(faces, 1));
+    geo.computeVertexNormals();
+    return new THREE.Mesh(geo, new THREE.MeshStandardMaterial({
+      color: new THREE.Color(...g.rgba.slice(0, 3)), metalness: 0.25, roughness: 0.55,
+      side: THREE.DoubleSide
+    }));
+  }
+  if (g.type === 'box') {
+    const geo = new THREE.BoxGeometry(g.size[0] * 2, g.size[1] * 2, g.size[2] * 2);
+    return new THREE.Mesh(geo, new THREE.MeshStandardMaterial({
+      color: new THREE.Color(...g.rgba.slice(0, 3)), metalness: 0.2, roughness: 0.6
+    }));
+  }
+  if (g.type === 'plane') {
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(6, 6), new THREE.MeshStandardMaterial({ color: 0x1a2230 }));
+    m.quaternion.setFromAxisAngle(new THREE.Vector3(1, 0, 0), -Math.PI / 2);
+    return m;
+  }
+  return null;
+}
+
+async function loadScene() {
+  meta = await (await fetch('/scene.json')).json();
+  const byBody = meta.bodies.map(() => new THREE.Group());
+  byBody.forEach(g => pivot.add(g));
+  for (const g of meta.geoms) {
+    const mesh = buildMesh(g);
+    if (!mesh) continue;
+    mesh.position.set(g.pos[0], g.pos[1], g.pos[2]);
+    mesh.quaternion.set(g.quat[0], g.quat[1], g.quat[2], g.quat[3]);
+    byBody[g.body].add(mesh);
+  }
+  bodyNodes = byBody;
+  renderer.setAnimationLoop(tick);
+}
+
+async function pollPose() {
+  try {
+    const d = await (await fetch('/pose')).json();
+    for (let b = 0; b < bodyNodes.length; b++) {
+      const p = d.b[b];
+      if (!p) continue;
+      bodyNodes[b].position.set(p[0], p[1], p[2]);
+      bodyNodes[b].quaternion.set(p[4], p[5], p[6], p[3]);
+    }
+  } catch (e) { /* 忽略瞬时错误 */ }
+}
+
+async function pollState() {
+  try {
+    const s = await (await fetch('/state')).json();
+    const tb = document.getElementById('joints');
+    tb.innerHTML = NAMES.map((n, i) =>
+      `<tr><td class="muted">${n}</td><td>${(s.joints[i] * 180 / Math.PI).toFixed(2)}°</td></tr>`
+    ).join('');
+    document.getElementById('fps').textContent = s.rate.toFixed(0);
+    document.getElementById('frames').textContent = s.frames;
+    const sp = document.getElementById('serial');
+    sp.textContent = s.serial_ok ? '已连接' : '未连接';
+    sp.className = s.serial_ok ? 'ok' : 'bad';
+    document.getElementById('sPort').textContent = s.serial_msg;
+    document.getElementById('sRate').textContent = s.rate.toFixed(0) + ' Hz';
+    document.getElementById('gripState').textContent =
+      s.grip_open ? `张开（左指 ${(s.grip_l * 1000).toFixed(0)} mm）` : `合拢（左指 ${(s.grip_l * 1000).toFixed(0)} mm）`;
+    document.getElementById('btnOpen').classList.toggle('on', s.grip_open);
+    document.getElementById('btnClose').classList.toggle('on', !s.grip_open);
+  } catch (e) { /* 忽略 */ }
+}
+
+document.getElementById('btnOpen').onclick = () => fetch('/gripper?open=1');
+document.getElementById('btnClose').onclick = () => fetch('/gripper?open=0');
+
+function resize() {
+  const w = view.clientWidth, h = view.clientHeight;
+  renderer.setSize(w, h);
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+}
+window.addEventListener('resize', resize);
+
+function tick() {
+  renderer.render(scene, camera);
+}
+
+resize();
+loadScene().then(() => {
+  setInterval(pollPose, 1000 / 60);
+  setInterval(pollState, 200);
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,86 @@
+"""把 arm_v7 + 夹爪 的 MJCF 导出成前端能吃的 JSON（body/geom/网格）。"""
+
+from __future__ import annotations
+
+import base64
+import json
+from pathlib import Path
+
+import numpy as np
+import mujoco
+
+HERE = Path(__file__).resolve().parent
+MODEL = HERE.parent / "model" / "arm_v7" / "arm_v7_gripper.xml"
+OUT = HERE.parent / "web" / "scene.json"
+
+GEOM_NAMES = {
+    int(mujoco.mjtGeom.mjGEOM_PLANE): "plane",
+    int(mujoco.mjtGeom.mjGEOM_BOX): "box",
+    int(mujoco.mjtGeom.mjGEOM_SPHERE): "sphere",
+    int(mujoco.mjtGeom.mjGEOM_CAPSULE): "capsule",
+    int(mujoco.mjtGeom.mjGEOM_CYLINDER): "cylinder",
+    int(mujoco.mjtGeom.mjGEOM_MESH): "mesh",
+}
+
+
+def b64(arr: np.ndarray) -> str:
+    return base64.b64encode(arr.tobytes()).decode("ascii")
+
+
+def export(model_path: Path = MODEL) -> dict:
+    model = mujoco.MjModel.from_xml_path(str(model_path))
+    bodies = [mujoco.mj_id2name(model, mujoco.mjtObj.mjOBJ_BODY, b) or f"body{b}"
+              for b in range(model.nbody)]
+
+    geoms, cache = [], {}
+    for g in range(model.ngeom):
+        name = mujoco.mj_id2name(model, mujoco.mjtObj.mjOBJ_GEOM, g) or ""
+        gtype = GEOM_NAMES.get(int(model.geom_type[g]), "other")
+        if gtype not in ("mesh", "box", "sphere", "cylinder", "capsule", "plane"):
+            continue
+        buf = {}
+        if gtype == "mesh":
+            mid = int(model.geom_dataid[g])
+            if mid not in cache:
+                va, vn = int(model.mesh_vertadr[mid]), int(model.mesh_vertnum[mid])
+                fa, fn = int(model.mesh_faceadr[mid]), int(model.mesh_facenum[mid])
+                verts = np.ascontiguousarray(model.mesh_vert[va:va + vn].astype(np.float32))
+                faces = np.ascontiguousarray(model.mesh_face[fa:fa + fn].astype(np.uint32))
+                cache[mid] = dict(v=b64(verts), f=b64(faces), nv=int(vn), nf=int(fn))
+            buf = cache[mid]
+        geoms.append(dict(
+            body=int(model.geom_bodyid[g]),
+            name=name,
+            type=gtype,
+            pos=[float(x) for x in model.geom_pos[g]],
+            quat=[float(x) for x in model.geom_quat[g]],
+            size=[float(x) for x in model.geom_size[g]],
+            rgba=[float(x) for x in model.geom_rgba[g]],
+            **buf,
+        ))
+
+    return dict(
+        scene="rm27_arm",
+        nbody=len(bodies),
+        bodies=bodies,
+        geoms=geoms,
+        nq=int(model.nq),
+        nu=int(model.nu),
+        actuator_names=[mujoco.mj_id2name(model, mujoco.mjtObj.mjOBJ_ACTUATOR, a) or f"act{a}"
+                        for a in range(model.nu)],
+        camera=dict(lookat=[0.20, 0.00, 0.30], distance=1.15, azimuth=135.0, elevation=-12.0),
+    )
+
+
+def main() -> None:
+    data = export()
+    OUT.parent.mkdir(parents=True, exist_ok=True)
+    OUT.write_text(json.dumps(data), encoding="utf-8")
+    ntri = sum(g.get("nf", 0) for g in data["geoms"])
+    print(f"导出 {OUT}")
+    print(f"  body {data['nbody']}  geom {len(data['geoms'])}  三角面 {ntri}")
+    print(f"  大小 {OUT.stat().st_size / 1024 / 1024:.2f} MB")
+
+
+if __name__ == "__main__":
+    main()

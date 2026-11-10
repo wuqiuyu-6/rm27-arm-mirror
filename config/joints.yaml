@@ -1,0 +1,28 @@
+# 六轴映射：sim_q = sign * raw_q + zero（单位 rad）
+#
+# 依据：
+#   * 固件发来的 q 是 URDF/DH 模型坐标（User/gravity/gravity_capture.c）
+#   * 实机与 model/arm_v7 的关节轴方向整体相反，所以 sign 全为 -1
+#   * joint3 的零位与模型差 180°，已用 zero 补偿（-pi）
+#   * joint4 方向单独确认过，同样取 -1
+#
+# 复标方法见 docs/calibration.md。
+sign:
+  joint1: -1.0
+  joint2: -1.0
+  joint3: -1.0
+  joint4: -1.0
+  joint5: -1.0
+  joint6: -1.0
+
+zero:
+  joint1: 0.0
+  joint2: 0.0
+  joint3: 0.0
+  joint4: 0.0
+  joint5: 0.0
+  joint6: 0.0
+
+serial:
+  port: COM6
+  baud: 115200

@@ -18,6 +18,7 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import sys
 import threading
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -31,8 +32,14 @@ WEB = HERE / "web"
 MODEL = HERE / "model" / "arm_v7" / "arm_v7_gripper.xml"
 
 JOINTS = ("joint1", "joint2", "joint3", "joint4", "joint5", "joint6")
-SIGN = np.array([-1.0] * 6)          # 与 config/joints.yaml 一致
-ZERO = np.zeros(6)
+
+# 六轴映射的唯一来源是 config/joints.yaml（CLI 与网页端共用）
+sys.path.insert(0, str(Path(__file__).resolve().parent / "src"))
+from arm_mirror.config import joint_map as _joint_map          # noqa: E402
+
+_SIGN, _ZERO = _joint_map()
+SIGN = np.array(_SIGN, dtype=float)
+ZERO = np.array(_ZERO, dtype=float)
 OPEN_POS = 0.028                     # 夹爪张开（米）
 CLOSE_POS = 0.000                    # 合拢
 

@@ -25,12 +25,11 @@ def _add_common(p: argparse.ArgumentParser) -> None:
                    help="波特率（默认 115200）")
     p.add_argument("--model", default=str(DEFAULT_MODEL) if default is None else default,
                    help="MJCF 路径")
-    p.add_argument("--sign", default="1,1,1,1,1,1" if default is None else default,
-                   help="六轴方向，+1/-1")
-    p.add_argument("--zero", default="0,0,0,0,0,0" if default is None else default,
-                   help="六轴零位偏置（rad）")
+    p.add_argument("--sign", default=default, help="六轴方向（默认读 config/joints.yaml）")
+    p.add_argument("--zero", default=default, help="六轴零位偏置（默认读 config/joints.yaml）")
+    p.add_argument("--config", default=default, help="映射配置文件（默认 config/joints.yaml）")
     p.add_argument("--flip", action="store_true", default=False if default is None else default,
-                   help="六轴全部取反（等价 --sign=-1,...）")
+                   help="六轴全部取反（覆盖配置）")
     p.add_argument("--clamp", action="store_true", default=False if default is None else default,
                    help="超出模型关节范围时夹住")
     p.add_argument("--no-crc", action="store_true", default=False if default is None else default,
@@ -53,8 +52,22 @@ def _build_parser() -> argparse.ArgumentParser:
     return p
 
 
+def _build_joint_map(args) -> JointMap:
+    """默认从 config/joints.yaml 读；--sign/--zero/--flip 只做临时覆盖。"""
+    cfg_path = getattr(args, "config", None)
+    jm = JointMap.from_config(cfg_path)
+    sign = getattr(args, "sign", None)
+    zero = getattr(args, "zero", None)
+    if getattr(args, "flip", False):
+        sign = "-1,-1,-1,-1,-1,-1"
+    if sign or zero:
+        jm = JointMap.parse(sign or ",".join(str(v) for v in jm.sign),
+                            zero or ",".join(str(v) for v in jm.zero))
+    return jm
+
+
 def _run(args) -> int:
-    jm = JointMap.parse("-1,-1,-1,-1,-1,-1" if args.flip else args.sign, args.zero)
+    jm = _build_joint_map(args)
     arm = ArmModel(args.model)
 
     viewer = renderer = None

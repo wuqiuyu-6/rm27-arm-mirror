@@ -1,10 +1,12 @@
 # 六轴映射：sim_q = sign * raw_q + zero（单位 rad）
 #
+# 本文件是**唯一来源**：CLI（arm_mirror）和网页端（web_mirror.py）都从这里读，
+# 命令行 --sign / --zero / --flip 只做临时覆盖。
+#
 # 依据：
 #   * 固件发来的 q 是 URDF/DH 模型坐标（User/gravity/gravity_capture.c）
 #   * 实机与 model/arm_v7 的关节轴方向整体相反，所以 sign 全为 -1
-#   * joint3 的零位与模型差 180°，已用 zero 补偿（-pi）
-#   * joint4 方向单独确认过，同样取 -1
+#   * 六个关节的零位偏置都是 0（早期 joint3 曾用 ±90°、joint4 曾用 +1，实测后已修正）
 #
 # 复标方法见 docs/calibration.md。
 sign:
@@ -26,3 +28,4 @@ zero:
 serial:
   port: COM6
   baud: 115200
+

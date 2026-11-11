@@ -1,5 +1,17 @@
 ﻿# Changelog
 
+## [0.2.0] - 2026-11-11
+
+### Changed
+- config/joints.yaml 成为六轴映射的**唯一来源**：CLI 与网页端都从它读取
+- CLI 默认值改为“读配置”，--sign/--zero/--flip 仅作临时覆盖
+- 网页端不再硬编码 sign/zero
+- 修正 joints.yaml 中关于 joint3 零位的过时注释
+
+### Fixed
+- 桌面端 bat 未带 --flip 导致方向与实机相反
+
+
 ## [0.1.0] - 2026-11-10
 
 ### Added

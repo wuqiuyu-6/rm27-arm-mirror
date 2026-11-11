@@ -17,7 +17,7 @@ JOINT_NAMES = ("joint1", "joint2", "joint3", "joint4", "joint5", "joint6")
 class JointMap:
     """sim_q = sign * raw_q + zero（rad）。
 
-    sign/zero 来自实机标定：先整体取反，再按关节修单个轴。
+    sign/zero 来自 `config/joints.yaml`（唯一来源）：先整体取反，再按关节修单个轴。
     """
     sign: tuple[float, ...] = (1.0, 1.0, 1.0, 1.0, 1.0, 1.0)
     zero: tuple[float, ...] = (0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
@@ -31,6 +31,13 @@ class JointMap:
         s = tuple(float(v) for v in sign.split(","))
         z = tuple(float(v) for v in zero.split(","))
         return cls(sign=s, zero=z)  # type: ignore[arg-type]
+
+    @classmethod
+    def from_config(cls, path=None) -> "JointMap":
+        """从 config/joints.yaml 读（CLI 与网页端共用）。"""
+        from .config import joint_map
+        s, z = joint_map(path)
+        return cls(sign=s, zero=z)
 
     def apply(self, raw) -> np.ndarray:
         return np.asarray(raw, dtype=float) * np.asarray(self.sign) + np.asarray(self.zero)

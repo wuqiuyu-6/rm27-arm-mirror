@@ -1,4 +1,4 @@
-"""把 arm_v7 + 夹爪 的 MJCF 导出成前端能吃的 JSON（body/geom/网格）。"""
+"""把装配场景 MJCF 导出成前端能吃的 JSON（web/scene.json）。"""
 
 from __future__ import annotations
 
@@ -9,9 +9,10 @@ from pathlib import Path
 import numpy as np
 import mujoco
 
-HERE = Path(__file__).resolve().parent
-MODEL = HERE.parent / "model" / "arm_v7" / "arm_v7_gripper.xml"
-OUT = HERE.parent / "web" / "scene.json"
+ROOT = Path(__file__).resolve().parents[1]
+import os
+MODEL = Path(os.environ.get("RM27_V19_SCENE", ROOT / "model" / "v19" / "scene_v19.xml"))
+OUT = ROOT / "web" / "scene.json"
 
 GEOM_NAMES = {
     int(mujoco.mjtGeom.mjGEOM_PLANE): "plane",
@@ -35,6 +36,8 @@ def export(model_path: Path = MODEL) -> dict:
     geoms, cache = [], {}
     for g in range(model.ngeom):
         name = mujoco.mj_id2name(model, mujoco.mjtObj.mjOBJ_GEOM, g) or ""
+        if name.startswith("col_"):
+            continue
         gtype = GEOM_NAMES.get(int(model.geom_type[g]), "other")
         if gtype not in ("mesh", "box", "sphere", "cylinder", "capsule", "plane"):
             continue
@@ -49,9 +52,7 @@ def export(model_path: Path = MODEL) -> dict:
                 cache[mid] = dict(v=b64(verts), f=b64(faces), nv=int(vn), nf=int(fn))
             buf = cache[mid]
         geoms.append(dict(
-            body=int(model.geom_bodyid[g]),
-            name=name,
-            type=gtype,
+            body=int(model.geom_bodyid[g]), name=name, type=gtype,
             pos=[float(x) for x in model.geom_pos[g]],
             quat=[float(x) for x in model.geom_quat[g]],
             size=[float(x) for x in model.geom_size[g]],
@@ -60,15 +61,15 @@ def export(model_path: Path = MODEL) -> dict:
         ))
 
     return dict(
-        scene="rm27_arm",
+        scene="rm27",
         nbody=len(bodies),
         bodies=bodies,
         geoms=geoms,
-        nq=int(model.nq),
-        nu=int(model.nu),
+        nq=int(model.nq), nu=int(model.nu),
         actuator_names=[mujoco.mj_id2name(model, mujoco.mjtObj.mjOBJ_ACTUATOR, a) or f"act{a}"
                         for a in range(model.nu)],
-        camera=dict(lookat=[0.20, 0.00, 0.30], distance=1.15, azimuth=135.0, elevation=-12.0),
+        ctrl_range=[[float(lo), float(hi)] for lo, hi in model.actuator_ctrlrange],
+        camera=dict(lookat=[0.33, 0.02, 0.30], distance=1.05, azimuth=35.0, elevation=-18.0),
     )
 
 

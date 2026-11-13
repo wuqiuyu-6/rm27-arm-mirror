@@ -57,7 +57,7 @@
         <tbody id="joints"></tbody>
       </table>
     </section>
-    <section>
+    <section id="gripSection">
       <h2>夹爪</h2>
       <div class="btns">
         <button id="btnOpen">打开</button>
@@ -199,10 +199,13 @@ async function pollState() {
     sp.className = s.serial_ok ? 'ok' : 'bad';
     document.getElementById('sPort').textContent = s.serial_msg;
     document.getElementById('sRate').textContent = s.rate.toFixed(0) + ' Hz';
-    document.getElementById('gripState').textContent =
-      s.grip_open ? `张开（左指 ${(s.grip_l * 1000).toFixed(0)} mm）` : `合拢（左指 ${(s.grip_l * 1000).toFixed(0)} mm）`;
-    document.getElementById('btnOpen').classList.toggle('on', s.grip_open);
-    document.getElementById('btnClose').classList.toggle('on', !s.grip_open);
+    document.getElementById('gripSection').style.display = s.has_gripper ? '' : 'none';
+    if (s.has_gripper) {
+      document.getElementById('gripState').textContent =
+        s.grip_open ? `张开（左指 ${(s.grip_l * 1000).toFixed(0)} mm）` : `合拢（左指 ${(s.grip_l * 1000).toFixed(0)} mm）`;
+      document.getElementById('btnOpen').classList.toggle('on', s.grip_open);
+      document.getElementById('btnClose').classList.toggle('on', !s.grip_open);
+    }
   } catch (e) { /* 忽略 */ }
 }
 

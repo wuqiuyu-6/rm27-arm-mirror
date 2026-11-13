@@ -29,7 +29,7 @@ import numpy as np
 
 HERE = Path(__file__).resolve().parent
 WEB = HERE / "web"
-MODEL = HERE / "model" / "arm_v7" / "arm_v7_gripper.xml"
+MODEL = HERE / "model" / "arm_v7" / "arm_v7_scene.xml"   # 默认无夹爪；--model 可换成带夹爪的
 
 JOINTS = ("joint1", "joint2", "joint3", "joint4", "joint5", "joint6")
 
@@ -57,17 +57,15 @@ class State:
             n: self.model.jnt_qposadr[mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_JOINT, n)]
             for n in JOINTS
         }
-        self.grip_act = [
-            mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_ACTUATOR, n)
-            for n in ("grip_l", "grip_r")
-        ]
+        self.has_gripper = mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_JOINT, "finger_l") >= 0
+        self.grip_act = ([mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_ACTUATOR, n)
+                          for n in ("grip_l", "grip_r")]
+                         if self.has_gripper else [])
         self.arm_dofs = [
             self.model.jnt_dofadr[mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_JOINT, n)]
             for n in JOINTS]
-        self.grip_qadr = [
-            self.model.jnt_qposadr[mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_JOINT, n)]
-            for n in ("finger_l", "finger_r")
-        ]
+        self.grip_qadr = ([self.model.jnt_qposadr[mujoco.mj_name2id(self.model, mujoco.mjtObj.mjOBJ_JOINT, n)]
+                           for n in ("finger_l", "finger_r")] if self.has_gripper else [])
 
         self.port = port
         self.baud = baud
@@ -163,8 +161,9 @@ class State:
                 raw=[float(v) for v in self.q_raw],
                 tau=[float(v) for v in self.tau],
                 grip_open=bool(self.grip_open),
-                grip_l=float(self.data.qpos[self.grip_qadr[0]]),
-                grip_r=float(self.data.qpos[self.grip_qadr[1]]),
+                has_gripper=bool(self.has_gripper),
+                grip_l=float(self.data.qpos[self.grip_qadr[0]]) if self.has_gripper else 0.0,
+                grip_r=float(self.data.qpos[self.grip_qadr[1]]) if self.has_gripper else 0.0,
                 serial_ok=self.serial_ok,
                 serial_msg=self.serial_msg,
                 frames=self.frames,
@@ -215,6 +214,9 @@ def make_handler(state: State):
             elif p == "/state":
                 self._json(state.state())
             elif p == "/gripper":
+                if not state.has_gripper:
+                    self._json(dict(ok=False, reason="模型没有夹爪"))
+                    return
                 qs = parse_qs(urlparse(self.path).query)
                 val = qs.get("open", ["toggle"])[0]
                 if val in ("1", "true", "open"):

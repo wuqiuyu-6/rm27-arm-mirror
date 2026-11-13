@@ -10,7 +10,7 @@ import numpy as np
 import mujoco
 
 HERE = Path(__file__).resolve().parent
-MODEL = HERE.parent / "model" / "arm_v7" / "arm_v7_gripper.xml"
+MODEL = HERE.parent / "model" / "arm_v7" / "arm_v7_scene.xml"
 OUT = HERE.parent / "web" / "scene.json"
 
 GEOM_NAMES = {

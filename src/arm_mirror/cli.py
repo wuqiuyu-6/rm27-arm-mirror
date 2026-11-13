@@ -130,6 +130,21 @@ def _run(args) -> int:
     return 0
 
 
+def _fill_defaults(ns) -> None:
+    """argparse.SUPPRESS 的公共参数没传时补齐（否则 _run 里属性不存在）。"""
+    from .config import serial as _serial_cfg
+    defaults = dict(
+        port=_serial_cfg().get("port", DEFAULT_PORT),
+        baud=_serial_cfg().get("baud", DEFAULT_BAUD),
+        model=str(DEFAULT_MODEL),
+        sign=None, zero=None, config=None,
+        flip=False, clamp=False, no_crc=False, alpha=1.0, seconds=0.0,
+    )
+    for k, v in defaults.items():
+        if not hasattr(ns, k):
+            setattr(ns, k, v)
+
+
 def main(argv=None) -> int:
     try:
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
@@ -137,9 +152,7 @@ def main(argv=None) -> int:
         pass
 
     args = _build_parser().parse_args(argv)
-    if getattr(args, "port", None) == DEFAULT_PORT:
-        from .config import serial as _serial_cfg
-        args.port = _serial_cfg().get("port", DEFAULT_PORT)
+    _fill_defaults(args)
     if not args.cmd:
         args.cmd = "view"
 
@@ -147,6 +160,7 @@ def main(argv=None) -> int:
     if args.port not in available_ports():
         print(f"打不开 {args.port}：系统当前串口 {describe_ports()}")
         print("检查 USB、驱动、板子是否上电（设备管理器里应能看到该 COM 口）。")
+        print("串口可在 config/joints.yaml 的 serial.port 修改，或命令行 --port 指定。")
         return 2
 
     return _run(args)

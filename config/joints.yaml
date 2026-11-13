@@ -26,6 +26,6 @@ zero:
   joint6: 0.0
 
 serial:
-  port: COM9
+  port: COM8
   baud: 115200
 

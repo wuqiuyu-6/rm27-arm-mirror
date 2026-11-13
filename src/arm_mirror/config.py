@@ -63,4 +63,4 @@ def joint_map(path: Path | str | None = None) -> tuple[tuple[float, ...], tuple[
 
 def serial(path: Path | str | None = None) -> dict[str, Any]:
     cfg = load(path).get("serial", {})
-    return dict(port=str(cfg.get("port", "COM6")), baud=int(cfg.get("baud", 115200)))
+    return dict(port=str(cfg.get("port", "COM8")), baud=int(cfg.get("baud", 115200)))

@@ -16,7 +16,7 @@ from .serial_link import DEFAULT_BAUD, DEFAULT_PORT, describe_ports, read_frames
 
 def _add_common(p: argparse.ArgumentParser) -> None:
     """公共参数：主命令和子命令都挂一份，支持两种写法：
-    `arm-mirror --port COM6 view` 与 `arm-mirror view --port COM6`。
+    `arm-mirror --port COM8 view` 与 `arm-mirror view --port COM8`。
     """
     default = argparse.SUPPRESS
     p.add_argument("--port", default=DEFAULT_PORT if default is None else default,

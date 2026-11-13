@@ -95,7 +95,9 @@ const key = new THREE.DirectionalLight(0xffffff, 1.4); key.position.set(2, -2, 3
 const fill = new THREE.DirectionalLight(0x88aaff, 0.6); fill.position.set(-2, 1, 1); scene.add(fill);
 
 const camera = new THREE.PerspectiveCamera(45, 1, 0.01, 100);
+camera.up.set(0, 0, 1);
 const grid = new THREE.GridHelper(4, 40, 0x2a3546, 0x1a2230);
+grid.rotation.x = Math.PI / 2;
 scene.add(grid);
 
 let bodyNodes = [], meta = null, pivot = new THREE.Group();
@@ -107,7 +109,7 @@ function applyCamera() {
   const c = Math.cos(orbit.pitch), s = Math.sin(orbit.pitch);
   const x = orbit.target.x + orbit.dist * c * Math.sin(orbit.yaw);
   const y = orbit.target.y - orbit.dist * c * Math.cos(orbit.yaw);
-  const z = orbit.target.z + orbit.dist * s;
+  const z = orbit.target.z - orbit.dist * s;
   camera.position.set(x, y, z);
   camera.lookAt(orbit.target);
 }
@@ -151,7 +153,6 @@ function buildMesh(g) {
   }
   if (g.type === 'plane') {
     const m = new THREE.Mesh(new THREE.PlaneGeometry(6, 6), new THREE.MeshStandardMaterial({ color: 0x1a2230 }));
-    m.quaternion.setFromAxisAngle(new THREE.Vector3(1, 0, 0), -Math.PI / 2);
     return m;
   }
   return null;

@@ -132,15 +132,18 @@ const scene = new THREE.Scene();
 scene.add(new THREE.HemisphereLight(0xbdd7ff, 0x1b2330, 1.1));
 const key = new THREE.DirectionalLight(0xffffff, 1.3); key.position.set(2, -2, 3); scene.add(key);
 const fill = new THREE.DirectionalLight(0x88aaff, 0.55); fill.position.set(-2, 1, 1); scene.add(fill);
-const grid = new THREE.GridHelper(4, 40, 0x2a3546, 0x1a2230); scene.add(grid);
+const grid = new THREE.GridHelper(4, 40, 0x2a3546, 0x1a2230);
+grid.rotation.x = Math.PI / 2;   // MuJoCo 是 Z-up
+scene.add(grid);
 
 const camera = new THREE.PerspectiveCamera(45, 1, 0.01, 100);
+camera.up.set(0, 0, 1);          // 关键：Z-up 才能和 MuJoCo 一致
 const orbit = { yaw: 2.3, pitch: -0.25, dist: 1.5, target: new THREE.Vector3(0.25, 0, 0.25) };
 function applyCamera() {
   const c = Math.cos(orbit.pitch), s = Math.sin(orbit.pitch);
   camera.position.set(orbit.target.x + orbit.dist * c * Math.sin(orbit.yaw),
                       orbit.target.y - orbit.dist * c * Math.cos(orbit.yaw),
-                      orbit.target.z + orbit.dist * s);
+                      orbit.target.z - orbit.dist * s);   // 负号：pitch<0 时相机在上方
   camera.lookAt(orbit.target);
 }
 applyCamera();
@@ -185,7 +188,6 @@ function buildMesh(g) {
   if (g.type === 'plane') {
     const m = new THREE.Mesh(new THREE.PlaneGeometry(6,6),
       new THREE.MeshStandardMaterial({color:0x1a2230}));
-    m.quaternion.setFromAxisAngle(new THREE.Vector3(1,0,0), -Math.PI/2);
     return m;
   }
   return null;

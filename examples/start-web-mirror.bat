@@ -9,7 +9,7 @@ echo   [rm27-arm-mirror] web HMI  http://127.0.0.1:%PORT%
 echo   Close this window to stop.
 echo.
 start "" "http://127.0.0.1:%PORT%"
-"%PY%" web_mirror.py --port %PORT% --serial-port COM6
+"%PY%" web_mirror.py --port %PORT%
 echo.
 echo   Exit code: %errorlevel%
 pause

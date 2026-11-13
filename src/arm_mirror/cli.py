@@ -20,7 +20,7 @@ def _add_common(p: argparse.ArgumentParser) -> None:
     """
     default = argparse.SUPPRESS
     p.add_argument("--port", default=DEFAULT_PORT if default is None else default,
-                   help="串口（默认 COM6）")
+                   help="串口（默认读 config/joints.yaml）")
     p.add_argument("--baud", type=int, default=DEFAULT_BAUD if default is None else default,
                    help="波特率（默认 115200）")
     p.add_argument("--model", default=str(DEFAULT_MODEL) if default is None else default,
@@ -137,6 +137,9 @@ def main(argv=None) -> int:
         pass
 
     args = _build_parser().parse_args(argv)
+    if getattr(args, "port", None) == DEFAULT_PORT:
+        from .config import serial as _serial_cfg
+        args.port = _serial_cfg().get("port", DEFAULT_PORT)
     if not args.cmd:
         args.cmd = "view"
 

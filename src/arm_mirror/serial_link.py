@@ -9,7 +9,7 @@ import serial.tools.list_ports
 
 from .protocol import Frame, iter_frames
 
-DEFAULT_PORT = "COM6"
+DEFAULT_PORT = "COM9"
 DEFAULT_BAUD = 115200
 
 

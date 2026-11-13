@@ -233,11 +233,14 @@ def make_handler(state: State):
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--port", type=int, default=8007)
-    ap.add_argument("--serial-port", default="COM6")
+    ap.add_argument("--serial-port", default=None, help="默认读 config/joints.yaml")
     ap.add_argument("--baud", type=int, default=115200)
     ap.add_argument("--no-serial", action="store_true")
     args = ap.parse_args()
 
+    if args.serial_port is None:
+        from arm_mirror.config import serial as _serial_cfg
+        args.serial_port = _serial_cfg().get("port", "COM9")
     st = State(MODEL, not args.no_serial, args.serial_port, args.baud)
     threading.Thread(target=st.run, daemon=True).start()
     st.start_serial()

@@ -1,5 +1,13 @@
 ﻿# Changelog
 
+## [0.2.1] - 2026-11-13
+
+### Changed
+- 串口默认改为 **COM9**（config/joints.yaml 的 serial.port）
+- CLI 与网页端未显式指定端口时都从配置读取
+- 启动 bat 不再写死 COM6
+
+
 ## [0.2.0] - 2026-11-11
 
 ### Changed

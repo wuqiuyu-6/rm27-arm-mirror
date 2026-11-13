@@ -166,7 +166,7 @@ async function loadScene() {
     const mesh = buildMesh(g);
     if (!mesh) continue;
     mesh.position.set(g.pos[0], g.pos[1], g.pos[2]);
-    mesh.quaternion.set(g.quat[0], g.quat[1], g.quat[2], g.quat[3]);
+    mesh.quaternion.set(g.quat[1], g.quat[2], g.quat[3], g.quat[0]);   // MuJoCo (w,x,y,z) -> three (x,y,z,w)
     byBody[g.body].add(mesh);
   }
   bodyNodes = byBody;

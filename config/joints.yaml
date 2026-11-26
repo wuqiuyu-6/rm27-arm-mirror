@@ -26,6 +26,8 @@ zero:
   joint6: 0.0
 
 serial:
+  # Windows: COM8    Ubuntu: /dev/ttyUSB0 或 /dev/serial/by-id/...
+  # 留空 = 自动探测（Windows 取第一个 COM 口，Linux 优先 /dev/serial/by-id）
   port: COM8
   baud: 115200
 

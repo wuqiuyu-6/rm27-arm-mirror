@@ -243,7 +243,7 @@ def main() -> None:
 
     if args.serial_port is None:
         from arm_mirror.config import serial as _serial_cfg
-        args.serial_port = _serial_cfg().get("port", "COM8")
+        args.serial_port = _serial_cfg()["port"]
     st = State(Path(args.model), not args.no_serial, args.serial_port, args.baud)
     threading.Thread(target=st.run, daemon=True).start()
     st.start_serial()

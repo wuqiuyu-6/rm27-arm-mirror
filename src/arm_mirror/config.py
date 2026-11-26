@@ -61,6 +61,32 @@ def joint_map(path: Path | str | None = None) -> tuple[tuple[float, ...], tuple[
     return sign, zero
 
 
+def default_port() -> str:
+    """没配置时自动探测串口：Windows 取 COMx，Linux 优先 /dev/serial/by-id。"""
+    import glob
+    import sys
+
+    if sys.platform.startswith("win"):
+        try:
+            from serial.tools import list_ports
+            ports = [p.device for p in list_ports.comports()]
+            if ports:
+                return sorted(ports)[0]
+        except Exception:
+            pass
+        return "COM8"
+
+    by_id = sorted(glob.glob("/dev/serial/by-id/*"))
+    if by_id:
+        return by_id[0]
+    for pattern in ("/dev/ttyUSB*", "/dev/ttyACM*", "/dev/ttyAMA*", "/dev/ttyS*"):
+        hits = sorted(glob.glob(pattern))
+        if hits:
+            return hits[0]
+    return "/dev/ttyUSB0"
+
+
 def serial(path: Path | str | None = None) -> dict[str, Any]:
     cfg = load(path).get("serial", {})
-    return dict(port=str(cfg.get("port", "COM8")), baud=int(cfg.get("baud", 115200)))
+    return dict(port=str(cfg.get("port") or default_port()),
+                baud=int(cfg.get("baud", 115200)))

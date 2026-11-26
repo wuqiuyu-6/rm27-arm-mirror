@@ -9,7 +9,15 @@ import serial.tools.list_ports
 
 from .protocol import Frame, iter_frames
 
-DEFAULT_PORT = "COM8"
+def _default_port() -> str:
+    try:
+        from .config import default_port
+        return default_port()
+    except Exception:
+        return "COM8"
+
+
+DEFAULT_PORT = _default_port()
 DEFAULT_BAUD = 115200
 
 

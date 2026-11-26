@@ -51,6 +51,30 @@ python web_mirror.py --port 8007    # 打开 http://127.0.0.1:8007
 - **夹爪是仿真里的**：按钮控制仿真夹爪的开合（模型里 `gripper_base` + `finger_l/finger_r` 两个滑轨 + 两个位置伺服）；
 - 没有真机时可用 `python web_mirror.py --no-serial` 只看页面（机械臂停在零位，夹爪按钮仍可用）。
 
+## Ubuntu 24.04
+
+`ash
+sudo apt update
+sudo apt install -y python3-venv libgl1 libegl1 libglew2.2 ffmpeg
+git clone -b main https://github.com/wuqiuyu-6/rm27-arm-mirror.git
+cd rm27-arm-mirror
+python3 -m venv .venv && . .venv/bin/activate
+pip install -e .[dev]
+
+sudo usermod -aG dialout       # 串口权限，重新登录生效
+sed -i 's|port: COM8|port: /dev/ttyUSB0|' config/joints.yaml
+
+pytest -q                           # 16 passed
+python -m arm_mirror print          # 只看读数
+python -m arm_mirror view           # 窗口（需要图形界面）
+python -m web_mirror --port 8007    # 网页
+`
+
+- 串口名：Windows COM8 ↔ Linux /dev/ttyUSB0；留空则自动探测（Linux 优先 /dev/serial/by-id/...，插拔不变名）
+- 无图形界面时：export MUJOCO_GL=egl
+- 录 mp4 需要 fmpeg
+- 启动脚本：Windows 用 examples/*.bat，Ubuntu 用 examples/*.sh
+
 ## 帧格式
 
 来自控制板固件 `User/gravity/gravity_capture.c`：
